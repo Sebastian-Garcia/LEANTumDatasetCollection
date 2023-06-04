@@ -1,5 +1,5 @@
 
-** Recording A Dataset (TUM Format) With D435i on Windows Laptop **
+***Recording A Dataset (TUM Format) With D435i on Windows Laptop***
 
 
 **System Requirements:**
@@ -28,21 +28,18 @@ pip install numpy
 (Version=1.22.3)
 **File Structure: **
 
-Place the ThreadStream.py file in the directory (folder) where you would like to save your data to. Create an rgb subfolder, and depth subfolder.
 
 Your file structure (in the src directory) before beginning recording should look something like this:
 
-
-src/ -
-      - ThreadStream.py
-
-**Setting Parameters:**
-
-**	**
+src/
+    - ThreadStream.py
+**Setting parameters**
+See comments in script file for where to modify parameters such as framerate, resolution, etc.
 
 **Running stream and recording:**
 
-When you are ready to record, simply run the script using ‘python ThreadStream.py’ or ‘python3 ThreadStream.py’, depending on which version you have as the executable. 
+First, CD into the src folder. 
+Then, when you are ready to record, run the script using ‘python ThreadStream.py’ or ‘python3 ThreadStream.py’, depending on which version you have as the executable. 
 
 You should receive two messages acknowledging that the RGB/Depth stream has started, along with the IMU. 
 
@@ -50,7 +47,7 @@ If you receive a “No frames received within 5000 seconds error,” try unplugg
 
 The dataset should start being collected, and when you want to end the recording, simply press Ctrl+C (At least twice in succession) to kill the process. 
 
-Your file structure should now generate a new directory with the name of your data and look something like this:
+A new directory should have been generated with the name of your dataset as entered in the script, and look something like this:
 
 &lt;datasetName>/ -
 
