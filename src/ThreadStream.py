@@ -7,17 +7,18 @@ import time
 import os
 
 
-class VideoStream:
+class CameraStream:
     def __init__(self, resolution=(640, 480), framerate=30):
 
-        self.datasetName = "Desk1"
-
+        self.datasetName = "ZoomOut"  # Change directory name for dataset output
+        self.unitsInSeconds = True
         self.color_image = np.zeros((resolution[0], resolution[1]))
-        self.depth_image = self.color_image
+        self.depth_image = np.zeros((resolution[0], resolution[1]))
         self.camera_stopped = False
         self.resolution = resolution
         self.framerate = framerate
 
+        # Do Not Modify
         self.imu_pipe = rs.pipeline()
         self.imu_config = rs.config()
         self.imu_config.enable_stream(
@@ -37,17 +38,17 @@ class VideoStream:
             rs.stream.color, resolution[0], resolution[1], rs.format.bgr8, framerate)
 
         # Check if directory exists, create if not
-        if 'dataset' not in os.listdir():
-            os.mkdir('dataset')
-            os.mkdir('dataset/rgb')
-            os.mkdir('dataset/depth')
+        if '{}'.format(self.datasetName) not in os.listdir():
+            os.mkdir('{}'.format(self.datasetName))
+            os.mkdir('{}/rgb'.format(self.datasetName))
+            os.mkdir('{}/depth'.format(self.datasetName))
 
-        self.fileIMU = open("dataset/imu.txt", "a")
+        self.fileIMU = open("{}/imu.txt".format(self.datasetName), "a")
         self.fileIMU.write(
             "# IMU data\n# file:{}\n# timestamp gx gy gz ax ay az\n".format(self.datasetName))
 
-        self.fileDepth = open("dataset/depth.txt", "a")
-        self.fileRGB = open("dataset/rgb.txt", "a")
+        self.fileDepth = open("{}/depth.txt".format(self.datasetName), "a")
+        self.fileRGB = open("{}/rgb.txt".format(self.datasetName), "a")
 
         self.fileRGB.write(
             "# color images\n# file: {}\n# timestamp filename\n".format(self.datasetName))
@@ -90,13 +91,18 @@ class VideoStream:
             self.depth_image = np.asanyarray(depth_frame.get_data()) * 5
             self.color_image = np.asanyarray(color_frame.get_data())
 
-            # stamp = "{:.6f}".format(depth_frame.get_timestamp() * 1e6)[6:]
-            stamp = "{:.0f}".format(depth_frame.get_timestamp() * 1e6)[4:]
+            if self.unitsInSeconds:
+                # Converts milliseconds to seconds
+                stamp = "{:.6f}".format(depth_frame.get_timestamp() / 1e3)[4:]
+            else:
+                # Converts milliseconds to nanoseconds
+                stamp = "{:.6f}".format(depth_frame.get_timestamp() * 1e6)[6:]
+
             fileName = "{}.png".format(stamp)
             cv2.imwrite(
-                'dataset/rgb/{}'.format(fileName), self.color_image)
+                '{}/rgb/{}'.format(self.datasetName, fileName), self.color_image)
             cv2.imwrite(
-                'dataset/depth/{}'.format(fileName), self.depth_image)
+                '{}/depth/{}'.format(self.datasetName, fileName), self.depth_image)
 
             self.fileDepth.write(stamp + " depth/" + fileName + "\n")
             self.fileRGB.write(stamp + " rgb/" + fileName + "\n")
@@ -111,38 +117,43 @@ class VideoStream:
             self.acc = mot_frames[0].as_motion_frame().get_motion_data()
             self.gyro = mot_frames[1].as_motion_frame().get_motion_data()
 
-            tempTime1 = mot_frames[0].get_timestamp() * 1e6  # / 1e3  # *1e6
-            tempTime2 = mot_frames[1].get_timestamp() * 1e6  # / 1e3  # *1e6
+            tempTime1 = mot_frames[0].get_timestamp() / 1e3  # *1e6
+            tempTime2 = mot_frames[1].get_timestamp() / 1e3  # *1e6
             sentTimeStamp = tempTime1
             sentTimeStamp = tempTime1 if (
                 tempTime1 > tempTime2) else tempTime2
             if (sentTimeStamp == self.previous_timestamp):
                 continue
 
-            # print(1.0/(sentTimeStamp/1e9 - self.previous_timestamp/1e9))
             self.previous_timestamp = sentTimeStamp
 
-            # stamp = "{:.6f}".format(mot_frames[1].get_timestamp() * 1e6)[6:]
-            stamp = "{:.0f}".format(sentTimeStamp)[4:]
+            if self.unitsInSeconds:
+                # Converts milliseconds into seconds
+                stamp = "{:.6f}".format(sentTimeStamp)[4:]
+            else:
+                # Converts milliseconds to nanoseconds
+                stamp = "{:.6f}".format(
+                    mot_frames[1].get_timestamp() * 1e6)[6:]
+
             self.fileIMU.write(
                 stamp + " {0} {1} {2} {3} {4} {5}\n".format(self.gyro.x, self.gyro.y, self.gyro.z, self.acc.x, self.acc.y, self.acc.z))
 
 
 if __name__ == '__main__':
 
-    vs = VideoStream()
-    vs.start_imu()
-    vs.start_camera()
+    sensor = CameraStream()
+    sensor.start_imu()
+    sensor.start_camera()
 
     try:
         while True:
-            cv2.imshow("image", vs.color_image)
+            # Shows RGB version of what sensor currently sees
+            cv2.imshow("image", sensor.color_image)
             # print("acc, gyro", vs.acc, vs.gyro)
             cv2.waitKey(1)
     except KeyboardInterrupt:
-        vs.fileIMU.close()
-        vs.fileRGB.close()
-        vs.fileDepth.close()
-        vs.imu_pipe.stop()
-        vs.vid_pipe.stop()
-        print('Got here')
+        sensor.fileIMU.close()
+        sensor.fileRGB.close()
+        sensor.fileDepth.close()
+        sensor.imu_pipe.stop()
+        sensor.vid_pipe.stop()
