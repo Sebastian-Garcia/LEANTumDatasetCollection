@@ -6,7 +6,7 @@
 
 Windows 10
 
-Python Installed (3.7 or higher preferred)
+Python Installed (At least 3.7 or higher))
 
 Vscode (for convenience but not necessary)
 
@@ -16,26 +16,24 @@ Vscode (for convenience but not necessary)
 
 Make sure you have the pyrealsense2, cv2, and numpy libraries installed on the device you are connecting the camera to for streaming and collecting data. Also make sure that the dependencies for these are also installed, the terminal will notify you of which ones might be missing. 
 
-These can be installed with the following commands:
+These can be installed with the following commands, and note that the version numbers need not be as specific (most recent versions will work):
 
 pip install pyrealsense2
+(Version=2.53.1.4623)
 
 pip install opencv-python
+(Version=4.5.5.64)
 
 pip install numpy
-
+(Version=1.22.3)
 **File Structure: **
 
 Place the ThreadStream.py file in the directory (folder) where you would like to save your data to. Create an rgb subfolder, and depth subfolder.
 
-Your file structure before beginning recording should look something like this:
+Your file structure (in the src directory) before beginning recording should look something like this:
 
-datasetName/ -
 
-      - rgb/
-
-      - depth/
-
+src/ -
       - ThreadStream.py
 
 **Setting Parameters:**
@@ -52,7 +50,7 @@ If you receive a “No frames received within 5000 seconds error,” try unplugg
 
 The dataset should start being collected, and when you want to end the recording, simply press Ctrl+C (At least twice in succession) to kill the process. 
 
-Your file structure should now look something like this:
+Your file structure should now generate a new directory with the name of your data and look something like this:
 
 &lt;datasetName>/ -
 
@@ -60,18 +58,18 @@ Your file structure should now look something like this:
 
       - depth/
 
-      - ThreadStream.py
-
       - imu.txt
 
       - rgb.txt
 
       - depth.txt
 
-**Post-processing:**
+**Format Changes Needed for ORBSLAM3:**
 
 For ORBSLAM3, you will need a file with a list of the rgb timestamps separately, and for this you can use the get_timestamps.py file included in this repo. Place it in the dataset directory, and run the script in that directory on your terminal. This should create an ‘rgb_timestamps.txt’ file. 
 
 **Troubleshooting with the D435i:**
 
-Some combinations of configuration settings will simply not work. These may result in “frames not received” errors or other ones. RGB will not work more than 30FPS when streaming concurrently with IMU, and it is still unsure whether depth will. 
+Due to potential hardware issues, first thing to try is simply to disconnect and reconnect the cable connecting the sensor and the computer used. 
+
+Some combinations of configuration settings will simply not work. Refer to the D435i manual for limitations. These include attempting to run at 60FPS with a resolution greater than 640 by 480.  These may result in “frames not received” errors or other ones. RGB will not work more than 30FPS when streaming concurrently with IMU, and it is still unsure whether depth will. 
